@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 interface BaseOptionType {
   [key: string]: any;
+  aa?: React.ReactNode;
 }
 
 type CascaderOption = BaseOptionType & {
