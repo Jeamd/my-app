@@ -278,7 +278,7 @@ export const sourceJsonMap: SourceJsonItem[] = [
                             },
                             {
                                 dataIndex: 'groups',
-                                title: '组',
+                                title: '套餐详情',
                                 // 合并子集diff结果
                                 margeDiff:true,
                                 childrenSourceJson:[

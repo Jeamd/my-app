@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import Cascader from "./components/Cascader";
-import './components/jsonDiff'
+import jsonDiff, { DiffDataItem } from './components/jsonDiff'
+import { curData, preData,sourceJsonMap } from "./components/jsonDiff/config";
+import { autoRender, isBasicData, renderLabel } from "./components/jsonDiff/utils";
 
 const options = [
   {
@@ -64,21 +66,68 @@ const options = [
 
 function App() {
   const [value, setValue] = useState([["bamboo", "little", "all"]]);
+  const [diffData, setDiffData] = useState<DiffDataItem[]>([])
+
+  useEffect(() => {
+    const diffData = jsonDiff(preData, curData, sourceJsonMap)
+
+    console.log(diffData)
+    setDiffData(diffData)
+  },[])
+
+  const renderDiffItem = (diffItem: DiffDataItem) => {
+    const {title, margeDiffData, oldValue, newValue, sourceJsonItem} = diffItem || {}
+    const render = sourceJsonItem?.render;
+
+    if(render) return [[render(oldValue, diffItem)], [render(newValue, diffItem)]];
+
+    if(margeDiffData && !!margeDiffData.length) {
+      const res: any[][] = [[], []]
+      margeDiffData.map((curDiffItem) => {
+        const [margeOld, margeNew] = renderDiffItem(curDiffItem);
+        res?.[0]?.push(margeOld)
+        res?.[1]?.push(margeNew)
+        return null;
+      })
+      
+      const label =renderLabel(title);
+
+      return [[<div>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>],[<div>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>]];
+    }
+
+   
+
+    return [[autoRender(oldValue, title)], [autoRender(newValue, title)]]
+  }
+
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <Cascader
+          <div style={{width: '80%'}}>
+          <div style={{display: "flex", 'textAlign': 'start', color: 'orange'}}>
+                <div style={{flex: 1}}>oldValue</div>
+                <div  style={{flex: 1}}>newValue</div>
+              </div>
+            {diffData.map((diffItem, index) => {
+              const data = renderDiffItem(diffItem)
+              console.log(data?.[0])
+              const oldR = data?.[0] || null;
+              const newR = data?.[1] || null;
+              return <div key={index} style={{display: "flex", 'textAlign': 'start'}}>
+                <div style={{flex: 1}}>{oldR}</div>
+                <div  style={{flex: 1}}>{newR}</div>
+              </div>
+            })}
+          </div>
+        {/* <Cascader
           onChange={(val) => {
             // console.log(JSON.stringify(val));
             setValue(val as any);
           }}
           // value={value}
           options={options}
-        />
+        /> */}
         {/* <a
           className="App-link"
           href="https://reactjs.org"
