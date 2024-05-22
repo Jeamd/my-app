@@ -92,7 +92,7 @@ function App() {
       
       const label =renderLabel(title);
 
-      return [[<div>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>],[<div>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>]];
+      return [[<div key={label + 'new'}>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>],[<div key={label + 'new'}>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>]];
     }
 
    
@@ -111,7 +111,6 @@ function App() {
               </div>
             {diffData.map((diffItem, index) => {
               const data = renderDiffItem(diffItem)
-              console.log(data?.[0])
               const oldR = data?.[0] || null;
               const newR = data?.[1] || null;
               return <div key={index} style={{display: "flex", 'textAlign': 'start'}}>

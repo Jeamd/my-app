@@ -1,4 +1,5 @@
-import type {SourceJsonItem} from './index'
+import type {DiffDataItem, SourceJsonItem} from './index'
+import jsonDiff from './index'
 // export const preData = {
 //     "person": {
 //       "name": "Alice",
@@ -163,6 +164,10 @@ export const preData = {
 				"singleTimesPrice": 1200,
 				"groups": [{
 					"selectNum": 1,
+                    'choose': {
+                        total: 1,
+                        select: 1
+                    },
 					"setMealContents": [{
 							"subContents": [],
 							"price": 0,
@@ -216,15 +221,20 @@ export const curData = {
 					"title": "商品组名称22",
 					"selectNum": 2,
 					"fromNum": 4,
+                    'choose': {
+                        total: 3,
+                        select: 1
+                    },
 					"setMealContents": [{
 						"title": "单品名称",
 						"count": 12,
 						"serviceDuration": 0
-					}, {
+					}, 
+                    {
 						"title": "单品名称2",
 						"count": 18,
 						"serviceDuration": 0
-					}]
+					}],
 				}],
 				"remark": ""
 			}
@@ -285,6 +295,14 @@ export const sourceJsonMap: SourceJsonItem[] = [
                                     {
                                         dataIndex: 'title',
                                         title: '名称',
+                                    },
+                                    {
+                                        dataIndex: 'choose',
+                                        title: '几选几',
+                                        margeDiff: true,
+                                        render: (value: any, item: DiffDataItem) => {
+                                            return <span key={value + 'new'}>{value.total}选{value.select}</span>
+                                        }
                                     },
                                     {
                                         dataIndex: 'selectNum',
