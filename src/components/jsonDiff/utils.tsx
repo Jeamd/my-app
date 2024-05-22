@@ -1,4 +1,5 @@
-import { DiffDataItem } from ".";
+import { DiffDataItem, SourceJsonItem } from ".";
+import { find } from "lodash";
 
 export const checkTypeData = (val: any) => {
     if(Array.isArray(val) && !val.length) return false;
@@ -26,16 +27,54 @@ export const renderLabel = (title: DiffDataItem['title']) => {
             return `第${Number(i) + 1}项`;
         }
         return i;
-    }).join('-')
+    }).join('/')
 }
 
-export const autoRender = (val: any, title: DiffDataItem['title']) => {
-    const label =renderLabel(title);
+
+export const deepRender = (val: any, sourceJsonItem?: SourceJsonItem, title?: string[]) => {
+    const res: any[] = []
+
+    const func = (val: any, sourceJsonItem?: SourceJsonItem, title?: string[]) => {
+
+        if(typeof val !== 'object' || val === null) {
+            const label = renderLabel(title || [])
+            res.push(<div key={label + val}>{label}: {val}</div>)
+            return;
+        };
+   
+        for (const key in val) {
+            if (Object.prototype.hasOwnProperty.call(val, key)) {
+                let curKeySourceJsonItem = sourceJsonItem;
+                if(!Array.isArray(val)) {
+                    curKeySourceJsonItem = find(sourceJsonItem?.childrenSourceJson || [], {dataIndex: key})
+                }
+                const item = val[key];
+                title?.push?.(curKeySourceJsonItem?.title || key);
+                func(item, curKeySourceJsonItem, [...(title || [])])
+            }
+        }
+    }
+
+    func(val, sourceJsonItem, [])
+
+    return res;
+}
+
+export const autoRender = (val: any, title?: DiffDataItem['title'], sourceJsonItem?: DiffDataItem['sourceJsonItem']) => {
+    const label =renderLabel(title || []);
     
     if(isBasicData(val)) return <div key={label + val}>{`${label}: ${val}`}</div>;
 
-    return <span key={label + val}>{`${label} ${JSON.stringify(val)}`}</span>;
+    return (
+        <div key={label + val}>
+            <span>{label}: </span>
+            <div style={{marginLeft: 40}}>
+                {deepRender(val, sourceJsonItem)}
+            </div>
+        </div>
+    );
   }
+
 
 // interface 
 

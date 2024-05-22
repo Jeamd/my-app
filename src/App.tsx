@@ -92,12 +92,20 @@ function App() {
       
       const label =renderLabel(title);
 
-      return [[<div key={label + 'new'}>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>],[<div key={label + 'new'}>{`${label}: `}<div style={{marginLeft: '40px'}}>{res[1]}</div></div>]];
+      return [[
+        <div key={label + 'old'}>
+          {`${label}: `}
+          <div style={{marginLeft: '40px'}}>{res[0]}</div>
+        </div>
+      ],[
+        <div key={label + 'new'}>
+          {`${label}: `}
+          <div style={{marginLeft: '40px'}}>{res[1]}</div>
+        </div>
+      ]];
     }
 
-   
-
-    return [[autoRender(oldValue, title)], [autoRender(newValue, title)]]
+    return [[autoRender(oldValue, title, sourceJsonItem)], [autoRender(newValue, title, sourceJsonItem)]]
   }
 
   return (
@@ -114,8 +122,8 @@ function App() {
               const oldR = data?.[0] || null;
               const newR = data?.[1] || null;
               return <div key={index} style={{display: "flex", 'textAlign': 'start'}}>
-                <div style={{flex: 1}}>{oldR}</div>
-                <div  style={{flex: 1}}>{newR}</div>
+                <div style={{width: '50%'}}>{oldR}</div>
+                <div  style={{width: '50%'}}>{newR}</div>
               </div>
             })}
           </div>
