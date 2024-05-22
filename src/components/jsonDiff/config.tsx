@@ -1,5 +1,6 @@
 import type {DiffDataItem, SourceJsonItem} from './index'
 import jsonDiff from './index'
+import { renderLabel } from './utils'
 // export const preData = {
 //     "person": {
 //       "name": "Alice",
@@ -300,8 +301,10 @@ export const sourceJsonMap: SourceJsonItem[] = [
                                         dataIndex: 'choose',
                                         title: '几选几',
                                         margeDiff: true,
+                                        // 自定义渲染需要合并子集diff 否则不生效
                                         render: (value: any, item: DiffDataItem) => {
-                                            return <span key={value + 'new'}>{value.total}选{value.select}</span>
+
+                                            return <span key={value + 'new'}>{renderLabel(item.title)}: {value.total}选{value.select}</span>
                                         }
                                     },
                                     {
