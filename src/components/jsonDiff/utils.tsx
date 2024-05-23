@@ -30,50 +30,35 @@ export const renderLabel = (title: DiffDataItem['title']) => {
     }).join('/')
 }
 
+/**
+ * 递归地过滤对象中所有值为 null 的属性
+ * @param {Object} obj - 要过滤的对象
+ * @returns {Object} - 过滤后的对象
+ */
+export function filterNull(obj: any, map = new Map()) {
+    // 如果传入的不是对象，则直接返回
+    if (typeof obj !== 'object' || obj === null) {
+        return obj;
+    }
 
-export const deepRender = (val: any, sourceJsonItem?: SourceJsonItem, title?: string[]) => {
-    const res: any[] = []
-
-    const func = (val: any, sourceJsonItem?: SourceJsonItem, title?: string[]) => {
-
-        if(typeof val !== 'object' || val === null) {
-            const label = renderLabel(title || [])
-            res.push(<div key={label + val}>{label}: {val}</div>)
-            return;
-        };
-   
-        for (const key in val) {
-            if (Object.prototype.hasOwnProperty.call(val, key)) {
-                let curKeySourceJsonItem = sourceJsonItem;
-                if(!Array.isArray(val)) {
-                    curKeySourceJsonItem = find(sourceJsonItem?.childrenSourceJson || [], {dataIndex: key})
-                }
-                const item = val[key];
-                title?.push?.(curKeySourceJsonItem?.title || key);
-                func(item, curKeySourceJsonItem, [...(title || [])])
+    if (map.get(obj)) {
+        return map.get(obj);
+    }
+    // 递归地处理对象的每个属性
+    const result = new obj.constructor();
+    map.set(obj, result);
+    for (const key in obj) {
+        // 如果属性值不为 null 和 0，则递归地处理它
+        // if (checkTypeData(obj[key])obj[key] !== null && obj[key] !== 0 && obj[key] !== undefined) {
+        if (checkTypeData(obj[key])) {
+            const value = filterNull(obj[key], map);
+            if (checkTypeData(value)) {
+                result[key] = value;
             }
         }
     }
-
-    func(val, sourceJsonItem, [])
-
-    return res;
+    return checkTypeData(result);
 }
-
-export const autoRender = (val: any, title?: DiffDataItem['title'], sourceJsonItem?: DiffDataItem['sourceJsonItem']) => {
-    const label =renderLabel(title || []);
-    
-    if(isBasicData(val)) return <div key={label + val}>{`${label}: ${val}`}</div>;
-
-    return (
-        <div key={label + val}>
-            <span>{label}: </span>
-            <div style={{marginLeft: 40}}>
-                {deepRender(val, sourceJsonItem)}
-            </div>
-        </div>
-    );
-  }
 
 
 // interface 

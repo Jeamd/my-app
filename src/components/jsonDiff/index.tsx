@@ -1,5 +1,5 @@
 import { find } from "lodash";
-import { checkTypeData, isBasicData } from "./utils";
+import { checkTypeData, filterNull, isBasicData } from "./utils";
 
 export interface SourceJsonItem {
     title?: string,
@@ -54,9 +54,9 @@ const jsonDiff:JsonDiffType = function (preJson, curJson, sourceJson) {
 
         // 基础数据diff
         if(isBasicData(preNode) || isBasicData(curNode)) {
-
-            const tempPreNode = checkTypeData(preNode);
-            const tempCurNode = checkTypeData(curNode);
+            
+            const tempPreNode = checkTypeData(filterNull(preNode));
+            const tempCurNode = checkTypeData(filterNull(curNode));
 
             return makeDiffReturn(tempPreNode !== tempCurNode);
             // if(preNode === curNode) return makeDiffReturn(false);

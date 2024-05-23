@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import Cascader from "./components/Cascader";
-import jsonDiff, { DiffDataItem } from './components/jsonDiff'
+import jsonDiff, { DiffDataItem, SourceJsonItem } from './components/jsonDiff'
 import { curData, preData,sourceJsonMap } from "./components/jsonDiff/config";
-import { autoRender, isBasicData, renderLabel } from "./components/jsonDiff/utils";
+import { filterNull, isBasicData, renderLabel } from "./components/jsonDiff/utils";
+import {find} from 'lodash'
+
+type DeepRenderType = (val: any, sourceJsonItem?: SourceJsonItem) => React.ReactNode;
 
 const options = [
   {
@@ -71,41 +74,89 @@ function App() {
   useEffect(() => {
     const diffData = jsonDiff(preData, curData, sourceJsonMap)
 
-    console.log(diffData)
     setDiffData(diffData)
   },[])
 
-  const renderDiffItem = (diffItem: DiffDataItem) => {
-    const {title, margeDiffData, oldValue, newValue, sourceJsonItem} = diffItem || {}
-    const render = sourceJsonItem?.render;
+  const deepRender: DeepRenderType = (value, sourceJsonItem) => {
 
-    if(render) return [[render(oldValue, diffItem)], [render(newValue, diffItem)]];
+    const val = filterNull(value)
 
-    if(margeDiffData && !!margeDiffData.length) {
-      const res: any[][] = [[], []]
-      margeDiffData.map((curDiffItem) => {
-        const [margeOld, margeNew] = renderDiffItem(curDiffItem);
-        res?.[0]?.push(margeOld)
-        res?.[1]?.push(margeNew)
-        return null;
-      })
-      
-      const label =renderLabel(title);
-
-      return [[
-        <div key={label + 'old'}>
-          {`${label}: `}
-          <div style={{marginLeft: '40px'}}>{res[0]}</div>
-        </div>
-      ],[
-        <div key={label + 'new'}>
-          {`${label}: `}
-          <div style={{marginLeft: '40px'}}>{res[1]}</div>
-        </div>
-      ]];
+    if(sourceJsonItem?.render) {
+      return sourceJsonItem?.render?.(val, sourceJsonItem) as React.ReactNode;
     }
 
-    return [[autoRender(oldValue, title, sourceJsonItem)], [autoRender(newValue, title, sourceJsonItem)]]
+    if(isBasicData(val)) return <span>：{val}</span>;
+
+    if(Array.isArray(val)) {
+      return (
+        <div style={{marginLeft: 40, marginBottom: 20}}>
+          {val.map((i, index) => {
+            return (
+              <>
+                <span>{`第${index + 1}项`}</span>
+                <div className="deepRenderArrayBox" style={{marginLeft: 40, marginBottom: 20}}>
+                  {deepRender(i, sourceJsonItem)}
+                </div>
+              </>
+            )
+          })}
+        </div>
+      )
+    }
+
+    if(Object.prototype.toString.call(val) === '[object Object]') {
+      return (
+          <div className="deepRenderObjBox" style={{marginLeft: 40, marginBottom: 20}}>
+            {Object.keys(val).map((key, index) => {
+              const i = val[key]
+              const curKeySourceJsonItem = find(sourceJsonItem?.childrenSourceJson || [], {dataIndex: key})
+              return (
+                <div>
+                  <span>{curKeySourceJsonItem?.title || curKeySourceJsonItem?.dataIndex || key}</span>
+                  {deepRender(i, sourceJsonItem)}
+                </div>
+              )
+            })}
+          </div>
+      )
+    }
+    return null;
+  }
+
+  const renderDiffItem = (diffItem: DiffDataItem) => {
+
+    const func = (nodeItem: DiffDataItem) => {
+
+      if(!nodeItem.margeDiffData?.length) {
+        return [deepRender(nodeItem.oldValue, diffItem.sourceJsonItem), deepRender(nodeItem.newValue, diffItem.sourceJsonItem)]
+      }
+
+     const {oldDom, newDom} = nodeItem.margeDiffData.reduce((preDomObj, curNodeItem)=>{
+        const [oldDom, newDom] = renderDiffItem(curNodeItem)
+
+        preDomObj.oldDom.push(oldDom)
+        preDomObj.newDom.push(newDom)
+
+        return preDomObj;
+
+      },{oldDom:[], newDom:[]} as {[x: string]: JSX.Element[]})
+
+
+      return [oldDom, newDom]
+    }
+
+    const [oldDom, newDom] = func(diffItem)
+
+    return [
+      <div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
+        <span>{renderLabel(diffItem.title)}</span>
+        <span>{oldDom}</span>
+      </div>,
+      <div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
+        <span>{renderLabel(diffItem.title)}</span>
+        <span>{newDom}</span>
+      </div>
+    ]
   }
 
   return (
