@@ -5,6 +5,8 @@ export interface SourceJsonItem {
     title?: string,
     dataIndex: string,
     childrenSourceJson?: SourceJsonItem[],
+    // 忽略此字段检测
+    ignoreField?: boolean,
     // 手动进行diff运算，不会再自动向下进行diff
     handelDiff?: (preNode:any, curNode:any) => boolean;
     // 合并子集的diff数据
@@ -45,6 +47,11 @@ const jsonDiff:JsonDiffType = function (preJson, curJson, sourceJson) {
             ] 
         }
 
+        // 忽略此字段检测
+        if(sourceJsonItem?.ignoreField) {
+            return makeDiffReturn(false);
+        }
+
         // 手动diff处理
         if(sourceJsonItem?.handelDiff) {
             const isDifferent = sourceJsonItem.handelDiff(preNode, curNode);
@@ -74,7 +81,7 @@ const jsonDiff:JsonDiffType = function (preJson, curJson, sourceJson) {
 
             const makeOthInfo = (diffItem:DiffDataItem, isMargeDiffItem?:boolean) => {
                 const path = [curKeySourceJsonItem?.dataIndex || key,...diffItem.path],
-                    title = [curKeySourceJsonItem?.title || key, ...diffItem.title];
+                    title = [curKeySourceJsonItem ? curKeySourceJsonItem?.title : key, ...diffItem.title];
                 if(isMargeDiffItem) {
                     path.shift()
                     title.shift()

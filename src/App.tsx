@@ -81,21 +81,31 @@ function App() {
 
     const val = filterNull(value)
 
+    if(sourceJsonItem?.ignoreField) {
+      return null;
+    }
+
     if(sourceJsonItem?.render) {
       return sourceJsonItem?.render?.(val, sourceJsonItem) as React.ReactNode;
     }
 
-    if(isBasicData(val)) return <span>：{val}</span>;
+    if(isBasicData(val)) {
+      if([null, undefined, NaN].includes(val)) return null;
+      
+      return <span>：{val?.toString?.() || val}</span>
+    };
 
     if(Array.isArray(val)) {
       return (
         <div style={{marginLeft: 40, marginBottom: 20}}>
           {val.map((i, index) => {
+            const renderResult = deepRender(i, sourceJsonItem);
+            if(!renderResult) return null;
             return (
               <>
                 <span>{`第${index + 1}项`}</span>
                 <div className="deepRenderArrayBox" style={{marginLeft: 40, marginBottom: 20}}>
-                  {deepRender(i, sourceJsonItem)}
+                  {renderResult}
                 </div>
               </>
             )
@@ -110,16 +120,19 @@ function App() {
             {Object.keys(val).map((key, index) => {
               const i = val[key]
               const curKeySourceJsonItem = find(sourceJsonItem?.childrenSourceJson || [], {dataIndex: key})
+              const renderResult = deepRender(i, curKeySourceJsonItem);
+              if(!renderResult) return null;
               return (
                 <div>
                   <span>{curKeySourceJsonItem?.title || curKeySourceJsonItem?.dataIndex || key}</span>
-                  {deepRender(i, sourceJsonItem)}
+                  {renderResult}
                 </div>
               )
             })}
           </div>
       )
     }
+
     return null;
   }
 
@@ -139,7 +152,7 @@ function App() {
 
         return preDomObj;
 
-      },{oldDom:[], newDom:[]} as {[x: string]: JSX.Element[]})
+      },{oldDom:[], newDom:[]} as {[x: string]: React.ReactNode[]})
 
 
       return [oldDom, newDom]
@@ -148,14 +161,14 @@ function App() {
     const [oldDom, newDom] = func(diffItem)
 
     return [
-      <div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
+      (oldDom ?<div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
         <span>{renderLabel(diffItem.title)}</span>
         <span>{oldDom}</span>
-      </div>,
-      <div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
-        <span>{renderLabel(diffItem.title)}</span>
-        <span>{newDom}</span>
-      </div>
+      </div> : null),
+      (newDom ?<div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
+      <span>{renderLabel(diffItem.title)}</span>
+      <span>{newDom}</span>
+    </div> : null)
     ]
   }
 
