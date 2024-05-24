@@ -97,14 +97,14 @@ function App() {
 
     if(Array.isArray(val)) {
       return (
-        <div style={{marginLeft: 40, marginBottom: 20}}>
+        <div style={{marginLeft: 12, marginBottom: 20}}>
           {val.map((i, index) => {
             const renderResult = deepRender(i, sourceJsonItem);
             if(!renderResult) return null;
             return (
               <>
                 <span>{`第${index + 1}项`}</span>
-                <div className="deepRenderArrayBox" style={{marginLeft: 40, marginBottom: 20}}>
+                <div className="deepRenderArrayBox" style={{marginLeft: 12, marginBottom: 20}}>
                   {renderResult}
                 </div>
               </>
@@ -116,7 +116,7 @@ function App() {
 
     if(Object.prototype.toString.call(val) === '[object Object]') {
       return (
-          <div className="deepRenderObjBox" style={{marginLeft: 40, marginBottom: 20}}>
+          <div className="deepRenderObjBox" style={{marginLeft: 12, marginBottom: 20}}>
             {Object.keys(val).map((key, index) => {
               const i = val[key]
               const curKeySourceJsonItem = find(sourceJsonItem?.childrenSourceJson || [], {dataIndex: key})
@@ -161,11 +161,11 @@ function App() {
     const [oldDom, newDom] = func(diffItem)
 
     return [
-      (oldDom ?<div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
+      (oldDom ?<div className="renderDiffItemBox" style={{marginLeft: 12, marginBottom: 20}}>
         <span>{renderLabel(diffItem.title)}</span>
         <span>{oldDom}</span>
       </div> : null),
-      (newDom ?<div className="renderDiffItemBox" style={{marginLeft: 40, marginBottom: 20}}>
+      (newDom ?<div className="renderDiffItemBox" style={{marginLeft: 12, marginBottom: 20}}>
       <span>{renderLabel(diffItem.title)}</span>
       <span>{newDom}</span>
     </div> : null)
