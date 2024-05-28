@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import Cascader from "./components/Cascader";
-import jsonDiff, { DiffDataItem, SourceJsonItem } from './components/jsonDiff'
+// import jsonDiff, { DiffDataItem, SourceJsonItem } from './components/jsonDiff'
+import jsonDiff, {DiffDataItem, SourceJsonItem} from "submit-diff";
 import { curData, preData,sourceJsonMap } from "./components/jsonDiff/config";
 import { filterNull, isBasicData, renderLabel } from "./components/jsonDiff/utils";
 import {find} from 'lodash'
