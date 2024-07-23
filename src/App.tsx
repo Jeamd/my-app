@@ -3,12 +3,20 @@ import logo from "./logo.svg";
 import "./App.css";
 import Cascader from "./components/Cascader";
 // import jsonDiff, { DiffDataItem, SourceJsonItem } from './components/jsonDiff'
-import jsonDiff, {DiffDataItem, SourceJsonItem} from "submit-diff";
-import { curData, preData,sourceJsonMap } from "./components/jsonDiff/config";
-import { filterNull, isBasicData, renderLabel } from "./components/jsonDiff/utils";
-import {find} from 'lodash'
+import jsonDiff, { DiffDataItem, SourceJsonItem } from "submit-diff";
+import { curData, preData, sourceJsonMap } from "./components/jsonDiff/config";
+import {
+  filterNull,
+  isBasicData,
+  renderLabel,
+} from "./components/jsonDiff/utils";
+import { find } from "lodash";
+import Highlight from "./components/testHighLight";
 
-type DeepRenderType = (val: any, sourceJsonItem?: SourceJsonItem) => React.ReactNode;
+type DeepRenderType = (
+  val: any,
+  sourceJsonItem?: SourceJsonItem
+) => React.ReactNode;
 
 const options = [
   {
@@ -70,146 +78,180 @@ const options = [
 
 function App() {
   const [value, setValue] = useState([["bamboo", "little", "all"]]);
-  const [diffData, setDiffData] = useState<DiffDataItem[]>([])
+  const [diffData, setDiffData] = useState<DiffDataItem[]>([]);
 
   useEffect(() => {
-    const diffData = jsonDiff(preData, curData, sourceJsonMap)
+    const diffData = jsonDiff(preData, curData, sourceJsonMap);
 
-    setDiffData(diffData)
-  },[])
+    setDiffData(diffData);
+  }, []);
 
   const deepRender: DeepRenderType = (value, sourceJsonItem) => {
+    const val = filterNull(value);
 
-    const val = filterNull(value)
-
-    if(sourceJsonItem?.ignoreField) {
+    if (sourceJsonItem?.ignoreField) {
       return null;
     }
 
-    if(sourceJsonItem?.render) {
+    if (sourceJsonItem?.render) {
       return sourceJsonItem?.render?.(val, sourceJsonItem) as React.ReactNode;
     }
 
-    if(isBasicData(val)) {
-      if([null, undefined, NaN].includes(val)) return null;
-      
-      return <span>：{val?.toString?.() || val}</span>
-    };
+    if (isBasicData(val)) {
+      if ([null, undefined, NaN].includes(val)) return null;
 
-    if(Array.isArray(val)) {
+      return <span>：{val?.toString?.() || val}</span>;
+    }
+
+    if (Array.isArray(val)) {
       return (
-        <div style={{marginLeft: 12, marginBottom: 20}}>
+        <div style={{ marginLeft: 12, marginBottom: 20 }}>
           {val.map((i, index) => {
             const renderResult = deepRender(i, sourceJsonItem);
-            if(!renderResult) return null;
+            if (!renderResult) return null;
             return (
               <>
                 <span>{`第${index + 1}项`}</span>
-                <div className="deepRenderArrayBox" style={{marginLeft: 12, marginBottom: 20}}>
+                <div
+                  className="deepRenderArrayBox"
+                  style={{ marginLeft: 12, marginBottom: 20 }}
+                >
                   {renderResult}
                 </div>
               </>
-            )
+            );
           })}
         </div>
-      )
+      );
     }
 
-    if(Object.prototype.toString.call(val) === '[object Object]') {
+    if (Object.prototype.toString.call(val) === "[object Object]") {
       return (
-          <div className="deepRenderObjBox" style={{marginLeft: 12, marginBottom: 20}}>
-            {Object.keys(val).map((key, index) => {
-              const i = val[key]
-              const curKeySourceJsonItem = find(sourceJsonItem?.childrenSourceJson || [], {dataIndex: key})
-              const renderResult = deepRender(i, curKeySourceJsonItem);
-              if(!renderResult) return null;
-              return (
-                <div>
-                  <span>{curKeySourceJsonItem?.title || curKeySourceJsonItem?.dataIndex || key}</span>
-                  {renderResult}
-                </div>
-              )
-            })}
-          </div>
-      )
+        <div
+          className="deepRenderObjBox"
+          style={{ marginLeft: 12, marginBottom: 20 }}
+        >
+          {Object.keys(val).map((key, index) => {
+            const i = val[key];
+            const curKeySourceJsonItem = find(
+              sourceJsonItem?.childrenSourceJson || [],
+              { dataIndex: key }
+            );
+            const renderResult = deepRender(i, curKeySourceJsonItem);
+            if (!renderResult) return null;
+            return (
+              <div>
+                <span>
+                  {curKeySourceJsonItem?.title ||
+                    curKeySourceJsonItem?.dataIndex ||
+                    key}
+                </span>
+                {renderResult}
+              </div>
+            );
+          })}
+        </div>
+      );
     }
 
     return null;
-  }
+  };
 
   const renderDiffItem = (diffItem: DiffDataItem) => {
-
     const func = (nodeItem: DiffDataItem) => {
-
-      if(!nodeItem.margeDiffData?.length) {
-        return [deepRender(nodeItem.oldValue, diffItem.sourceJsonItem), deepRender(nodeItem.newValue, diffItem.sourceJsonItem)]
+      if (!nodeItem.margeDiffData?.length) {
+        return [
+          deepRender(nodeItem.oldValue, diffItem.sourceJsonItem),
+          deepRender(nodeItem.newValue, diffItem.sourceJsonItem),
+        ];
       }
 
-     const {oldDom, newDom} = nodeItem.margeDiffData.reduce((preDomObj, curNodeItem)=>{
-        const [oldDom, newDom] = renderDiffItem(curNodeItem)
+      const { oldDom, newDom } = nodeItem.margeDiffData.reduce(
+        (preDomObj, curNodeItem) => {
+          const [oldDom, newDom] = renderDiffItem(curNodeItem);
 
-        preDomObj.oldDom.push(oldDom)
-        preDomObj.newDom.push(newDom)
+          preDomObj.oldDom.push(oldDom);
+          preDomObj.newDom.push(newDom);
 
-        return preDomObj;
+          return preDomObj;
+        },
+        { oldDom: [], newDom: [] } as { [x: string]: React.ReactNode[] }
+      );
 
-      },{oldDom:[], newDom:[]} as {[x: string]: React.ReactNode[]})
+      return [oldDom, newDom];
+    };
 
-
-      return [oldDom, newDom]
-    }
-
-    const [oldDom, newDom] = func(diffItem)
+    const [oldDom, newDom] = func(diffItem);
 
     return [
-      (oldDom ?<div className="renderDiffItemBox" style={{marginLeft: 12, marginBottom: 20}}>
-        <span>{renderLabel(diffItem.title)}</span>
-        <span>{oldDom}</span>
-      </div> : null),
-      (newDom ?<div className="renderDiffItemBox" style={{marginLeft: 12, marginBottom: 20}}>
-      <span>{renderLabel(diffItem.title)}</span>
-      <span>{newDom}</span>
-    </div> : null)
-    ]
-  }
+      oldDom ? (
+        <div
+          className="renderDiffItemBox"
+          style={{ marginLeft: 12, marginBottom: 20 }}
+        >
+          <span>{renderLabel(diffItem.title)}</span>
+          <span>{oldDom}</span>
+        </div>
+      ) : null,
+      newDom ? (
+        <div
+          className="renderDiffItemBox"
+          style={{ marginLeft: 12, marginBottom: 20 }}
+        >
+          <span>{renderLabel(diffItem.title)}</span>
+          <span>{newDom}</span>
+        </div>
+      ) : null,
+    ];
+  };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-          <div style={{width: '80%'}}>
-          <div style={{display: "flex", 'textAlign': 'start', color: 'orange'}}>
-                <div style={{flex: 1}}>oldValue</div>
-                <div  style={{flex: 1}}>newValue</div>
-              </div>
+    <>
+      {/* <div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <div style={{ width: "80%" }}>
+            <div
+              style={{ display: "flex", textAlign: "start", color: "orange" }}
+            >
+              <div style={{ flex: 1 }}>oldValue</div>
+              <div style={{ flex: 1 }}>newValue</div>
+            </div>
             {diffData.map((diffItem, index) => {
-              const data = renderDiffItem(diffItem)
+              const data = renderDiffItem(diffItem);
               const oldR = data?.[0] || null;
               const newR = data?.[1] || null;
-              return <div key={index} style={{display: "flex", 'textAlign': 'start'}}>
-                <div style={{width: '50%'}}>{oldR}</div>
-                <div  style={{width: '50%'}}>{newR}</div>
-              </div>
+              return (
+                <div
+                  key={index}
+                  style={{ display: "flex", textAlign: "start" }}
+                >
+                  <div style={{ width: "50%" }}>{oldR}</div>
+                  <div style={{ width: "50%" }}>{newR}</div>
+                </div>
+              );
             })}
           </div>
-        {/* <Cascader
-          onChange={(val) => {
-            // console.log(JSON.stringify(val));
-            setValue(val as any);
-          }}
-          // value={value}
-          options={options}
-        /> */}
-        {/* <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a> */}
-      </header>
-    </div>
+          <Cascader
+            onChange={(val) => {
+              // console.log(JSON.stringify(val));
+              setValue(val as any);
+            }}
+            // value={value}
+            options={options}
+          />
+          <a
+            className="App-link"
+            href="https://reactjs.org"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn React
+          </a>
+        </header>
+      </div> */}
+      <Highlight></Highlight>
+    </>
   );
 }
 
